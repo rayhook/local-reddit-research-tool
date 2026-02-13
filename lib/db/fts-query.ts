@@ -2,7 +2,7 @@
 import { prisma } from "./client";
 import type { Post } from "@/generated/prisma/client";
 
-interface FtsResult extends Post {
+export interface FtsResult extends Post {
   rank: number;
   snippet_title: string;
   snippet_selftext: string;

@@ -24,6 +24,10 @@
 .DS_Store
 *.pem
 
+# local SQLite database (may contain fetched data / search history)
+*.db
+prisma/*.db
+
 # debug
 npm-debug.log*
 yarn-debug.log*

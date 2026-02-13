@@ -1,0 +1,54 @@
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../generated/prisma"
+  runtime       = "bun"
+  binaryTargets = ["native"]
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Subreddit {
+  id            Int       @id @default(autoincrement())
+  name          String    @unique
+  lastFetchedAt DateTime?
+  posts         Post[]
+
+  @@index([name])
+}
+
+model Post {
+  id          Int       @id @default(autoincrement())
+  redditId    String    @unique
+  title       String
+  selftext    String    @default("")
+  author      String
+  upvotes     Int       @default(0)
+  createdUtc  DateTime
+  url         String
+  fetchedAt   DateTime  @default(now())
+  subredditId Int
+  subreddit   Subreddit @relation(fields: [subredditId], references: [id])
+
+  @@index([subredditId])
+  @@index([createdUtc])
+  @@index([fetchedAt])
+  @@index([redditId])
+}
+
+model SearchQuery {
+  id         Int      @id @default(autoincrement())
+  keywords   String // comma-separated, stored as-is
+  subreddits String // comma-separated, stored as-is
+  createdAt  DateTime @default(now())
+}
+
+model ApiCall {
+  id        Int      @id @default(autoincrement())
+  endpoint  String
+  timestamp DateTime @default(now())
+  count     Int      @default(1)
+
+  @@index([timestamp])
+}

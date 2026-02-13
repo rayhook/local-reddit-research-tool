@@ -35,6 +35,9 @@ export async function searchAction(
     if (subreddits.length > 10) {
       return { data: null, error: "Maximum 10 subreddits per search." };
     }
+    if (keywords.length > 50) {
+      return { data: null, error: "Maximum 50 keywords per search." };
+    }
 
     const data = await executeSearch(subreddits, keywords, page, sortBy);
     return { data, error: null };

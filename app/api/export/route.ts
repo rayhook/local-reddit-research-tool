@@ -3,14 +3,40 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db/client";
 import { CSV_HEADER, formatPostAsCsvRow } from "@/lib/services/csv-service";
 
-export async function POST(request: NextRequest) {
-  const { postIds, keywords } = (await request.json()) as {
-    postIds: number[];
-    keywords: string[];
-  };
+const MAX_EXPORT_IDS = 500;
 
-  if (!postIds?.length) {
+function normalizePostIds(raw: unknown): number[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((id) =>
+      typeof id === "number" && Number.isInteger(id) ? id : Number(id),
+    )
+    .filter((id) => Number.isInteger(id) && id > 0);
+}
+
+export async function POST(request: NextRequest) {
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return new Response("Invalid JSON", { status: 400 });
+  }
+  const raw =
+    body && typeof body === "object" && "postIds" in body
+      ? (body as { postIds?: unknown; keywords?: unknown })
+      : null;
+  const postIds = raw ? normalizePostIds(raw.postIds) : [];
+  const keywords = Array.isArray(raw?.keywords)
+    ? raw.keywords.filter((k): k is string => typeof k === "string")
+    : [];
+
+  if (postIds.length === 0) {
     return new Response("No posts selected", { status: 400 });
+  }
+  if (postIds.length > MAX_EXPORT_IDS) {
+    return new Response(`Maximum ${MAX_EXPORT_IDS} posts per export`, {
+      status: 400,
+    });
   }
 
   const encoder = new TextEncoder();

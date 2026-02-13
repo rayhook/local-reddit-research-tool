@@ -10,11 +10,15 @@ interface ExportablePost {
   matchedKeywords?: string[];
 }
 
+// Formula injection: Excel/LibreOffice treat leading =, +, -, @, \t, \r as formula
+const FORMULA_START = /^[=+\-@\t\r]/;
+
 function escapeCSV(value: string): string {
-  if (value.includes(",") || value.includes('"') || value.includes("\n")) {
-    return `"${value.replace(/"/g, '""')}"`;
+  const sanitized = value.replace(/\r\n|\r/g, "\n");
+  if (FORMULA_START.test(sanitized) || sanitized.includes(",") || sanitized.includes('"') || sanitized.includes("\n")) {
+    return `"${sanitized.replace(/"/g, '""')}"`;
   }
-  return value;
+  return sanitized;
 }
 
 const CSV_HEADER =
